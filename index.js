@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import Parser from "rss-parser"; // 1. L'outil
 import { cyan, yellow, red, green } from "colorette";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();
 const port = process.env.APP_PORT || 3000;
@@ -61,13 +62,13 @@ async function collecterArticles() {
 app.get("/test-collecte", async (req, res) => {
   const resultats = await collecterArticles();
   console.log(
-    green(`✅ Collecte terminée : ${resultats.length} articles trouvés.`)
+    green(`✅ Collecte terminée : ${resultats.length} articles trouvés.`),
   );
   res.json(resultats); // On renvoie le tableau brut pour vérifier dans le navigateur
 });
 
 app.listen(port, () => {
   console.log(
-    cyan(`Lighthouse Étape 2 prête sur http://localhost:${port}/test-collecte`)
+    cyan(`Lighthouse Étape 2 prête sur http://localhost:${port}/test-collecte`),
   );
 });
