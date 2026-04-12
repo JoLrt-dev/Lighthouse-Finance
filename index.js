@@ -1,46 +1,51 @@
 import "dotenv/config";
 import express from "express";
-import Parser from "rss-parser"; // 1. L'outil
-import { cyan, yellow, red, green } from "colorette";
+import Parser from "rss-parser";
+import { cyan, yellow, red, green, gray } from "colorette";
 import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 const port = process.env.APP_PORT || 3000;
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// 2. Configuration du Parser avec un User-Agent
+// --- CONFIGURATION DU PARSER ---
 const parser = new Parser({
   headers: {
     "User-Agent": "Lighthouse-Finance-Bot/1.0",
   },
 });
 
-// 3. Les sources de données
 const RSS_FEEDS = [
-  "https://www.impots.gouv.fr/rss.xml",
+  "https://www.economie.gouv.fr/rss", // URL plus stable que le XML direct des impôts
   "https://www.service-public.gouv.fr/abonnements/rss/actu-actualites-particuliers.rss",
   "https://www.lafinancepourtous.com/rss",
 ];
 
-// --- LOGIQUE DE L'ÉTAPE 2 ---
-async function collecterArticles() {
-  console.log(cyan("🔍 Scan des flux RSS..."));
-  let articlesTrouves = [];
+// --- UTILITAIRE : LOADER ---
+function createLoader(text) {
+  const chars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  let i = 0;
+  return setInterval(() => {
+    process.stdout.write(`\r${cyan(chars[i++ % chars.length])} ${text}`);
+  }, 100);
+}
 
-  // Calcul de la fenêtre de tir (7 jours)
+// --- ÉTAPE 1 : COLLECTE ---
+async function collecterArticles() {
+  console.log(cyan("\n🔍 Scan des flux RSS..."));
+  console.time("⏱️ Temps de scan RSS");
+
+  let articlesTrouves = [];
   const dateLimite = new Date();
   dateLimite.setDate(dateLimite.getDate() - 7);
 
   for (const url of RSS_FEEDS) {
     try {
-      // On télécharge et on parse le flux
       const feed = await parser.parseURL(url);
       console.log(yellow(`📖 Lecture de : ${feed.title}`));
 
       feed.items.forEach((item) => {
         const dateArticle = new Date(item.pubDate || item.isoDate);
-
-        // Comparaison des dates
         if (dateArticle > dateLimite) {
           articlesTrouves.push({
             titre: item.title,
@@ -51,49 +56,78 @@ async function collecterArticles() {
         }
       });
     } catch (err) {
-      // Si un flux échoue, on log l'erreur mais on continue la boucle
       console.log(red(`❌ Erreur sur le flux ${url}: ${err.message}`));
     }
   }
-
+  console.timeEnd("⏱️ Temps de scan RSS");
   return articlesTrouves;
 }
-// --- TEST IA  ---
 
-// --- TEST IA  ---
-async function mainAI() {
-  console.log(cyan("\n🤖 Appel à Gemini en cours..."));
+// --- ÉTAPE 2 : ANALYSE IA ---
+async function mainAI(articles) {
+  if (articles.length === 0) {
+    console.log(yellow("\n⚠️ Aucun article à analyser."));
+    return "Pas d'actualités récentes.";
+  }
 
-  // Démarrage du chrono avec un label unique
+  console.log(
+    cyan(
+      `\n🤖 Appel à Gemini (gemini-3-flash-preview) pour ${articles.length} articles...`,
+    ),
+  );
+  const loader = createLoader("L'IA analyse les titres...");
   console.time("⏱️ Temps de réponse IA");
 
   try {
+    const prompt = `Voici les titres de ma veille financière : 
+    ${articles.map((a) => a.titre).join("\n")}
+    Résume les 3 tendances principales en quelques mots.`;
+
+    // Utilisation stricte de ta configuration demandée
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: "Explain how AI works in a few words",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
-    console.log(green("✅ Réponse reçue :"), response.text);
+    clearInterval(loader);
+    process.stdout.write("\r\x1b[K"); // Nettoie la ligne du loader
+
+    const texteFinal = response.text;
+    console.log(green("✅ Synthèse reçue :"));
+    console.log(gray("--------------------------------------------------"));
+    console.log(texteFinal);
+    console.log(gray("--------------------------------------------------"));
+
+    return texteFinal;
   } catch (error) {
-    console.log(red("❌ Erreur IA :"), error.message);
+    clearInterval(loader);
+    process.stdout.write("\r\x1b[K");
+    console.log(red("\n❌ Erreur IA :"), error.message);
+    return "Erreur d'analyse IA.";
   } finally {
-    // Arrêt du chrono et affichage automatique
     console.timeEnd("⏱️ Temps de réponse IA");
   }
 }
-mainAI();
 
-// --- ROUTE DE TEST ÉTAPE 2 ---
+// --- ROUTE DE TEST ---
 app.get("/test-collecte", async (req, res) => {
-  const resultats = await collecterArticles();
-  console.log(
-    green(`✅ Collecte terminée : ${resultats.length} articles trouvés.`),
-  );
-  res.json(resultats); // On renvoie le tableau brut pour vérifier dans le navigateur
+  // On attend d'abord les articles
+  const articles = await collecterArticles();
+
+  // On attend ensuite l'IA (en lui passant les articles)
+  const synthese = await mainAI(articles);
+
+  res.json({
+    nb_articles: articles.length,
+    synthese_ia: synthese,
+    details: articles,
+  });
 });
 
 app.listen(port, () => {
+  console.log(cyan("=================================================="));
   console.log(
-    cyan(`Lighthouse Étape 2 prête sur http://localhost:${port}/test-collecte`),
+    green(`🚀 Lighthouse prêt sur http://localhost:${port}/test-collecte`),
   );
+  console.log(cyan("=================================================="));
 });
