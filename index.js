@@ -16,7 +16,7 @@ const parser = new Parser({
 });
 
 const RSS_FEEDS = [
-  "https://www.economie.gouv.fr/rss", // URL plus stable que le XML direct des impôts
+  "https://www.economie.gouv.fr/rss/toutesactualites",
   "https://www.service-public.gouv.fr/abonnements/rss/actu-actualites-particuliers.rss",
   "https://www.lafinancepourtous.com/rss",
 ];
@@ -109,25 +109,29 @@ async function mainAI(articles) {
   }
 }
 
-// --- ROUTE DE TEST ---
-app.get("/test-collecte", async (req, res) => {
-  // On attend d'abord les articles
+// --- FONCTION PRINCIPALE (AUTO-EXÉCUTANTE) ---
+async function runVeille() {
+  console.log(cyan("\n🚀 Lancement automatique de la veille..."));
+
+  // 1. On collecte
   const articles = await collecterArticles();
 
-  // On attend ensuite l'IA (en lui passant les articles)
-  const synthese = await mainAI(articles);
+  // 2. On analyse si on a des résultats
+  if (articles.length > 0) {
+    const synthese = await mainAI(articles);
+    // Ici, tu pourrais plus tard ajouter une étape 3 : Envoyer par email ou Discord
+  } else {
+    console.log(yellow("📭 Aucun nouvel article trouvé aujourd'hui."));
+  }
+}
 
-  res.json({
-    nb_articles: articles.length,
-    synthese_ia: synthese,
-    details: articles,
-  });
-});
+// --- INITIALISATION DU SERVEUR ---
+app.listen(port, async () => {
+  console.log(cyan("=================================================="));
+  console.log(green(`🚀 Lighthouse Server actif sur le port ${port}`));
+  console.log(cyan("=================================================="));
 
-app.listen(port, () => {
-  console.log(cyan("=================================================="));
-  console.log(
-    green(`🚀 Lighthouse prêt sur http://localhost:${port}/test-collecte`),
-  );
-  console.log(cyan("=================================================="));
+  // --- DÉCLENCHEMENT AUTOMATIQUE ---
+  // On lance la veille dès que le serveur est prêt
+  await runVeille();
 });
