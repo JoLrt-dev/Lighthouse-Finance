@@ -3,6 +3,7 @@ import express from "express";
 import Parser from "rss-parser";
 import { cyan, yellow, red, green, gray } from "colorette";
 import { GoogleGenAI } from "@google/genai";
+import nodemailer from "nodemailer";
 
 const app = express();
 const port = process.env.APP_PORT || 3000;
@@ -79,14 +80,45 @@ async function mainAI(articles) {
   console.time("⏱️ Temps de réponse IA");
 
   try {
-    const prompt = `Voici les titres de ma veille financière : 
-    ${articles.map((a) => a.titre).join("\n")}
-    Résume les 3 tendances principales en quelques mots.`;
+    const prompt = `
+En tant que "Lighthouse AI", analyse ces articles :
+${articles.map((a) => `- TITRE: ${a.titre} | SOURCE: ${a.source} | LIEN: ${a.lien}`).join("\n")}
+CONSIGNES DE FORMATAGE STRICTES :
+1. Utilise "### " au début de chaque titre de sujet (ex: ### Titre).
+2. Utilise "**" pour mettre en gras les libellés (ex: **1. Synthèse Expert :**).
+3. Pour le lien, utilise cette forme : [LIEN_HTML]
+4. Remplace [LIEN_HTML] par : <a href="LIEN_REEL" style="color: #008b8b; text-decoration: none; font-weight: bold;">Lire sur SOURCE_REELLE</a>
 
+Ton objectif est de rédiger une newsletter de veille actionnable. Pour les 3 sujets les plus pertinents, respecte strictement la structure suivante :
+
+---
+### [TITRE DU SUJET]
+**Score de criticité :** [Note de 1 à 5] /5 
+** [URL_DE_L'ARTICLE] ** 
+
+**1. Synthèse Expert:**
+Rédige un résumé technique mais concis. Croise les informations si plusieurs sources traitent du même sujet. Explique l'impact fiscal ou patrimonial (ex: modification du barème, nouvelle aide, évolution des taux).
+
+**2. Angle de Vulgarisation :**
+Donne au CGP l'idée directrice pour expliquer cela simplement à ses clients. Ton : Pédagogique, rassurant, et dynamique.
+
+**3. Script Slides Instagram :**
+Propose un plan en 4 slides pour un carrousel :
+- Slide 1 (Accroche) : Un titre "Hook" qui interpelle.
+- Slide 2 (Le Problème/Le Changement) : Ce qui change concrètement.
+- Slide 3 (La Solution/L'Action) : Ce qu'il faut faire maintenant.
+- Slide 4 (Appel à l'action) : Une question pour engager l'audience.
+
+**Conclusion globale :** Une phrase sur la tendance de fond de la semaine.
+`;
     // Utilisation stricte de ta configuration demandée
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7, // Équilibre entre précision et créativité pour les scripts Insta
+        topP: 0.8, // Permet une certaine diversité dans les angles de vulgarisation
+      },
     });
 
     clearInterval(loader);
@@ -109,6 +141,8 @@ async function mainAI(articles) {
   }
 }
 
+// --- ÉTAPE 3 : ENVOI DU MAIL ---
+n
 // --- FONCTION PRINCIPALE (AUTO-EXÉCUTANTE) ---
 async function runVeille() {
   console.log(cyan("\n🚀 Lancement automatique de la veille..."));
@@ -119,7 +153,10 @@ async function runVeille() {
   // 2. On analyse si on a des résultats
   if (articles.length > 0) {
     const synthese = await mainAI(articles);
-    // Ici, tu pourrais plus tard ajouter une étape 3 : Envoyer par email ou Discord
+    // 3. On envoie le mail
+    if (synthese && synthese !== "Erreur d'analyse IA.") {
+      await envoyerEmail(synthese);
+    }
   } else {
     console.log(yellow("📭 Aucun nouvel article trouvé aujourd'hui."));
   }
