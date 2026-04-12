@@ -183,32 +183,63 @@ async function envoyerEmail(syntheseIA) {
     );
 
   const htmlFinal = `
-    <!DOCTYPE html>
-    <html>
-      <body style="background-color: #ffffff; margin: 0; padding: 40px 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; line-height: 1.7; -webkit-font-smoothing: antialiased;">
-        <div style="max-width: 600px; margin: auto;">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lighthouse Finance</title>
+  <style type="text/css">
+    /* Quelques resets pour les clients mails modernes */
+    body { margin: 0; padding: 0; min-width: 100%; width: 100% !important; }
+    img { line-height: 100%; outline: none; text-decoration: none; border: 0; }
+    table { border-collapse: collapse !important; }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+  
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" role="presentation">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; width: 100%;" role="presentation">
           
-          <header style="text-align: center; margin-bottom: 50px;">
-            <h1 style="font-family: Georgia, serif; font-size: 26px; font-weight: normal; letter-spacing: 5px; text-transform: uppercase; color: #000; margin: 0 0 10px 0;">Lighthouse Finance</h1>
-            <p style="font-size: 11px; color: #999999; text-transform: uppercase; letter-spacing: 3px; margin: 0;">Les actus de la semaine</p>
-          </header>
+          <tr>
+            <td align="center" style="padding-bottom: 50px;">
+              <h1 style="font-family: Georgia, serif; font-size: 26px; font-weight: normal; letter-spacing: 5px; text-transform: uppercase; color: #000000; margin: 0;">
+                Lighthouse Finance
+              </h1>
+              <p style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #999999; text-transform: uppercase; letter-spacing: 3px; margin: 10px 0 0 0;">
+                Les actus de la semaine
+              </p>
+            </td>
+          </tr>
 
-          <main style="font-size: 15px;">
-            ${corpsEmail}
-          </main>
+          <tr>
+            <td align="left" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; color: #333333; line-height: 1.7; padding-bottom: 40px;">
+              ${corpsEmail}
+            </td>
+          </tr>
 
-          <footer style="margin-top: 50px; padding-top: 40px; border-top: 1px solid #f2f2f2; text-align: center;">
-            <p style="margin: 0; color: #999999; font-size: 12px; letter-spacing: 0.5px;">
-              Généré par <strong>Lighthouse Finance AI</strong>
-            </p>
-            <p style="margin: 6px 0 0; color: #bbbbbb; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px;">
-              © ${new Date().getFullYear()} • Créé avec passion par SlowFocus
-            </p>
-          </footer>
-        </div>
-      </body>
-    </html>
-  `;
+          <tr>
+            <td align="center" style="border-top: 1px solid #f2f2f2; padding-top: 40px;">
+              <p style="font-family: Arial, sans-serif; margin: 0; color: #999999; font-size: 12px; letter-spacing: 0.5px;">
+                Généré par <strong style="color: #666666;">Lighthouse Finance AI</strong>
+              </p>
+              <p style="font-family: Arial, sans-serif; margin: 8px 0 0; color: #bbbbbb; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px;">
+                © ${new Date().getFullYear()} • Créé avec passion par SlowFocus
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+`;
 
   const mailOptions = {
     from: `"Lighthouse Finance" <${process.env.EMAIL_USER}>`,
