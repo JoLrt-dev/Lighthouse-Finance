@@ -2,12 +2,13 @@ import "dotenv/config";
 import express from "express";
 import Parser from "rss-parser"; // 1. L'outil
 import { cyan, yellow, red, green } from "colorette";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 const port = process.env.APP_PORT || 3000;
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// 2. Configuration du Parser avec un User-Agent pour la politesse logicielle
+// 2. Configuration du Parser avec un User-Agent
 const parser = new Parser({
   headers: {
     "User-Agent": "Lighthouse-Finance-Bot/1.0",
@@ -57,6 +58,30 @@ async function collecterArticles() {
 
   return articlesTrouves;
 }
+// --- TEST IA  ---
+
+// --- TEST IA  ---
+async function mainAI() {
+  console.log(cyan("\n🤖 Appel à Gemini en cours..."));
+
+  // Démarrage du chrono avec un label unique
+  console.time("⏱️ Temps de réponse IA");
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: "Explain how AI works in a few words",
+    });
+
+    console.log(green("✅ Réponse reçue :"), response.text);
+  } catch (error) {
+    console.log(red("❌ Erreur IA :"), error.message);
+  } finally {
+    // Arrêt du chrono et affichage automatique
+    console.timeEnd("⏱️ Temps de réponse IA");
+  }
+}
+mainAI();
 
 // --- ROUTE DE TEST ÉTAPE 2 ---
 app.get("/test-collecte", async (req, res) => {

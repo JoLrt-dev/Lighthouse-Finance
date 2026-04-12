@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^1.48.0",
     "@google/generative-ai": "^0.24.1",
     "colorette": "^2.0.20",
     "dotenv": "^17.2.4",
