@@ -87,16 +87,16 @@ CONSIGNES DE FORMATAGE STRICTES :
 1. Utilise "### " au début de chaque titre de sujet (ex: ### Titre).
 2. Utilise "**" pour mettre en gras les libellés (ex: **1. Synthèse Expert :**).
 3. Pour le lien, utilise cette forme : [LIEN_HTML]
-4. Remplace [LIEN_HTML] par : <a href="LIEN_REEL" style="color: #008b8b; text-decoration: none; font-weight: bold;">Lire sur SOURCE_REELLE</a>
+4. Remplace [LIEN_HTML] par : <a href="LIEN_REEL" style="color: #D97706; text-decoration: none; font-weight: bold;">Lire sur SOURCE_REELLE</a>
 
-Ton objectif est de rédiger une newsletter de veille actionnable. Pour les 3 sujets les plus pertinents, respecte strictement la structure suivante :
+Ton objectif est de rédiger une newsletter de veille financière pour Maureen. Tutoies là. Pour les 3 sujets les plus pertinents, respecte strictement la structure suivante :
 
 ---
 ### [TITRE DU SUJET]
 **Score de criticité :** [Note de 1 à 5] /5 
 ** [URL_DE_L'ARTICLE] ** 
 
-**1. Synthèse Expert:**
+**1. Synthèse :**
 Rédige un résumé technique mais concis. Croise les informations si plusieurs sources traitent du même sujet. Explique l'impact fiscal ou patrimonial (ex: modification du barème, nouvelle aide, évolution des taux).
 
 **2. Angle de Vulgarisation :**
@@ -126,9 +126,6 @@ Propose un plan en 4 slides pour un carrousel :
 
     const texteFinal = response.text;
     console.log(green("✅ Synthèse reçue :"));
-    console.log(gray("--------------------------------------------------"));
-    console.log(texteFinal);
-    console.log(gray("--------------------------------------------------"));
 
     return texteFinal;
   } catch (error) {
@@ -142,10 +139,96 @@ Propose un plan en 4 slides pour un carrousel :
 }
 
 // --- ÉTAPE 3 : ENVOI DU MAIL ---
-n
+async function envoyerEmail(syntheseIA) {
+  console.log(cyan("\n📧 Création de la veille Lighthouse..."));
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT || 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  // --- FORMATAGE DU CORPS ---
+  const corpsEmail = syntheseIA
+    .replace(
+      /### (.*)/g,
+      '<h2 style="font-family: Georgia, serif; font-size: 19px; color: #D97706; margin-top: 40px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">$1</h2>',
+    )
+    .replace(
+      /^\*\*(\d\..*?)\*\*/gm,
+      '<strong style="color: #111111; font-weight: 700;">$1</strong>',
+    )
+    .replace(
+      /^\*\*(Score de criticité :)\*\*/gm,
+      '<strong style="color: #111111; font-weight: 700;">$1</strong>',
+    )
+    .replace(
+      /^\*\*(Conclusion globale :)\*\*/gm,
+      '<strong style="color: #111111; font-weight: 700;">$1</strong>',
+    )
+    .replace(/\*\*/g, "")
+    // On ajoute une marge basse très importante (120px) à la conclusion pour "pousser" le footer
+    .replace(
+      /Conclusion globale : (.*)/g,
+      '<div style="margin-top: 50px; padding-top: 25px; border-top: 1px double #eee; font-style: italic; color: #555; margin-bottom: 120px;"><strong>Conclusion :</strong> $1</div>',
+    )
+    .replace(/\n/g, "<br>")
+    .replace(
+      /---/g,
+      '<hr style="border: 0; border-top: 1px solid #f0f0f0; margin: 40px 0;">',
+    );
+
+  const htmlFinal = `
+    <!DOCTYPE html>
+    <html>
+      <body style="background-color: #ffffff; margin: 0; padding: 40px 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; line-height: 1.7; -webkit-font-smoothing: antialiased;">
+        <div style="max-width: 600px; margin: auto;">
+          
+          <header style="text-align: center; margin-bottom: 50px;">
+            <h1 style="font-family: Georgia, serif; font-size: 26px; font-weight: normal; letter-spacing: 5px; text-transform: uppercase; color: #000; margin: 0 0 10px 0;">Lighthouse Finance</h1>
+            <p style="font-size: 11px; color: #999999; text-transform: uppercase; letter-spacing: 3px; margin: 0;">Les actus de la semaine</p>
+          </header>
+
+          <main style="font-size: 15px;">
+            ${corpsEmail}
+          </main>
+
+          <footer style="margin-top: 50px; padding-top: 40px; border-top: 1px solid #f2f2f2; text-align: center;">
+            <p style="margin: 0; color: #999999; font-size: 12px; letter-spacing: 0.5px;">
+              Généré par <strong>Lighthouse Finance AI</strong>
+            </p>
+            <p style="margin: 6px 0 0; color: #bbbbbb; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px;">
+              © ${new Date().getFullYear()} • Créé avec passion par SlowFocus
+            </p>
+          </footer>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: `"Lighthouse Finance" <${process.env.EMAIL_USER}>`,
+    to: process.env.EMAIL_TO,
+    subject: `Lighthouse Finance : ${new Date().toLocaleDateString("fr-FR")}`,
+    html: htmlFinal,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(
+      green(`✅ Newsletter envoyée avec succès à ${process.env.EMAIL_TO} !`),
+    );
+  } catch (error) {
+    console.log(red("❌ Erreur :"), error.message);
+  }
+}
 // --- FONCTION PRINCIPALE (AUTO-EXÉCUTANTE) ---
 async function runVeille() {
-  console.log(cyan("\n🚀 Lancement automatique de la veille..."));
+  console.log(cyan(" Lancement automatique de la veille..."));
 
   // 1. On collecte
   const articles = await collecterArticles();
