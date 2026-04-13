@@ -1,4 +1,5 @@
 import Parser from "rss-parser";
+import { cyan, yellow, red, green, gray } from "colorette";
 
 // --- CONFIGURATION DU PARSER ---
 const parser = new Parser({
@@ -8,8 +9,8 @@ const parser = new Parser({
 });
 
 export async function collecterArticles(feeds) {
-  //   console.log(cyan("\n🔍 Scan des flux RSS..."));
-  //   console.time("⏱️ Temps de scan RSS");
+  console.log(cyan("\n🔍 Scan des flux RSS..."));
+  console.time("⏱️ Temps de scan RSS");
   let articlesFound = [];
   const limitDate = new Date();
   limitDate.setDate(limitDate.getDate() - 7);
