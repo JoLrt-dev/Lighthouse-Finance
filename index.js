@@ -4,23 +4,12 @@ import Parser from "rss-parser";
 import { cyan, yellow, red, green, gray } from "colorette";
 import { GoogleGenAI } from "@google/genai";
 import nodemailer from "nodemailer";
+import { RSS_FEEDS } from "./src/config/feeds";
+import { collecterArticles } from "./src/services/rssService.js";
 
 const app = express();
 const port = process.env.APP_PORT || 3000;
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-// --- CONFIGURATION DU PARSER ---
-const parser = new Parser({
-  headers: {
-    "User-Agent": "Lighthouse-Finance-Bot/1.0",
-  },
-});
-
-const RSS_FEEDS = [
-  "https://www.economie.gouv.fr/rss/toutesactualites",
-  "https://www.service-public.gouv.fr/abonnements/rss/actu-actualites-particuliers.rss",
-  "https://www.lafinancepourtous.com/rss",
-];
 
 // --- UTILITAIRE : LOADER ---
 function createLoader(text) {
@@ -29,39 +18,6 @@ function createLoader(text) {
   return setInterval(() => {
     process.stdout.write(`\r${cyan(chars[i++ % chars.length])} ${text}`);
   }, 100);
-}
-
-// --- ÉTAPE 1 : COLLECTE ---
-async function collecterArticles() {
-  console.log(cyan("\n🔍 Scan des flux RSS..."));
-  console.time("⏱️ Temps de scan RSS");
-
-  let articlesTrouves = [];
-  const dateLimite = new Date();
-  dateLimite.setDate(dateLimite.getDate() - 7);
-
-  for (const url of RSS_FEEDS) {
-    try {
-      const feed = await parser.parseURL(url);
-      console.log(yellow(`📖 Lecture de : ${feed.title}`));
-
-      feed.items.forEach((item) => {
-        const dateArticle = new Date(item.pubDate || item.isoDate);
-        if (dateArticle > dateLimite) {
-          articlesTrouves.push({
-            titre: item.title,
-            lien: item.link,
-            source: feed.title || "Source officielle",
-            date: dateArticle.toLocaleDateString("fr-FR"),
-          });
-        }
-      });
-    } catch (err) {
-      console.log(red(`❌ Erreur sur le flux ${url}: ${err.message}`));
-    }
-  }
-  console.timeEnd("⏱️ Temps de scan RSS");
-  return articlesTrouves;
 }
 
 // --- ÉTAPE 2 : ANALYSE IA ---
@@ -259,22 +215,35 @@ async function envoyerEmail(syntheseIA) {
 }
 // --- FONCTION PRINCIPALE (AUTO-EXÉCUTANTE) ---
 async function runVeille() {
-  console.log(cyan(" Lancement automatique de la veille..."));
+  console.log(cyan("🚀 Lancement de la veille Lighthouse..."));
+  try {
+    // 1. On collecte
+    const articles = await collecterArticles(RSS_FEEDS);
 
-  // 1. On collecte
-  const articles = await collecterArticles();
-
-  // 2. On analyse si on a des résultats
-  if (articles.length > 0) {
-    const synthese = await mainAI(articles);
-    // 3. On envoie le mail
-    if (synthese && synthese !== "Erreur d'analyse IA.") {
-      await envoyerEmail(synthese);
-    }
-  } else {
-    console.log(yellow("📭 Aucun nouvel article trouvé aujourd'hui."));
+    // 2. On analyse si on a des résultats
+  } catch (error) {
+    console.error(
+      `❌ Erreur lors de l'exécution de la veille : ${error.message}`,
+    );
   }
 }
+// async function runVeille() {
+//   console.log(cyan(" Lancement automatique de la veille..."));
+
+//   // 1. On collecte
+//   const articles = await collecterArticles();
+
+//   // 2. On analyse si on a des résultats
+//   if (articles.length > 0) {
+//     const synthese = await mainAI(articles);
+//     // 3. On envoie le mail
+//     if (synthese && synthese !== "Erreur d'analyse IA.") {
+//       await envoyerEmail(synthese);
+//     }
+//   } else {
+//     console.log(yellow("📭 Aucun nouvel article trouvé aujourd'hui."));
+//   }
+// }
 
 // --- INITIALISATION DU SERVEUR ---
 app.listen(port, async () => {
