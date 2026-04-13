@@ -1,8 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
-export async function aiAnalysis(articles, apiKey) {
-  const genAI = new GoogleGenAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // si dispo, gemini-3-flash-preview
+export async function aiAnalysis(articles) {
+  const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
   const prompt = `
 En tant que "Lighthouse AI", analyse ces articles :
 ${articles.map((a) => `- TITRE: ${a.titre} | SOURCE: ${a.source} | LIEN: ${a.lien}`).join("\n")}
@@ -37,7 +36,8 @@ Propose un plan en 4 slides pour un carrousel :
 `;
 
   try {
-    const result = await model.generateContent({
+    const result = await genAI.models.generateContent({
+      model: "gemini-3-flash-preview", // ou gemini-2.0-flash selon tes tests
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.7,
@@ -45,10 +45,16 @@ Propose un plan en 4 slides pour un carrousel :
       },
     });
 
-    const response = await result.response;
-    return response.text();
+    if (result && result.candidates && result.candidates[0].content) {
+      const texteGenere = result.candidates[0].content.parts[0].text;
+      console.log("✅ Texte extrait avec succès");
+      return texteGenere;
+    } else {
+      console.log("Structure reçue :", JSON.stringify(result, null, 2));
+      throw new Error("La structure de réponse Gemini est inattendue.");
+    }
   } catch (error) {
-    // On propage l'erreur pour que l'index puisse l'attraper
-    throw new Error(`Gemini Error: ${error.message}`);
+    console.log("⚠️ Erreur lors de l'extraction :", error.message);
+    throw error;
   }
 }

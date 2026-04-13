@@ -1,5 +1,6 @@
 import Parser from "rss-parser";
 import { cyan, yellow, red, green, gray } from "colorette";
+import { RSS_FEEDS } from "../config/feeds.js";
 
 // --- CONFIGURATION DU PARSER ---
 const parser = new Parser({
