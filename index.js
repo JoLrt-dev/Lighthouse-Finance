@@ -113,7 +113,7 @@ Propose un plan en 4 slides pour un carrousel :
 `;
     // Utilisation stricte de ta configuration demandée
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash", //par défaut on va utiliser gemini-3-flash-preview, si KO, on utilise gemini-2.5-flash
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.7, // Équilibre entre précision et créativité pour les scripts Insta
