@@ -1,112 +1,84 @@
 # ⚓️ Lighthouse Finance
 
-Intelligent RSS Monitoring & AI Content Automation for Finance Professionals
 
----
+**Intelligent RSS Monitoring & AI Content Automation for Finance Professionals**
+
+
 
 ## 🚀 Overview
 
-**Lighthouse Finance** is an automation tool designed for finance professionals and wealth managers.
+**Lighthouse Finance** is a cutting-edge automation tool designed for Wealth Managers and Financial Advisors.
 
-It scans official financial RSS feeds (Tax Authorities, AMF, Service-Public, etc.), detects high-impact regulatory updates, and transforms them into ready-to-publish social media content using **Google Gemini 1.5 Flash**.
+The system monitors official and specialized RSS feeds (BOFIP, AMF, Cryptoast, Le Monde, etc.), identifies high-impact regulatory or economic updates, and transforms them into actionable content using **Google Gemini 3 Flash**.
 
-Each week, users receive:
+**Every Monday at 08:00 AM**, subscribers receive a structured newsletter including:
 
-- 3 high-impact news selections
-- Simplified summaries
-- Instagram carousel (slide) outlines
-- Delivered directly via email
+- **Top 3 Finance Picks**: Expert summaries, simplified angles, and practical advice.
+- **Real Estate Brief**: The most significant property market news of the week.
+- **Tech/Crypto Corner**: Monitoring digital markets and upcoming regulations.
+- **Instagram Scripts**: A 4-slide carousel plan for each topic, ready for social media publishing.
 
----
 
-## 🎯 Problem
-
+## 🎯 The Problem
 Finance professionals face:
 
-- Information overload
-- Scattered regulatory updates
-- Time-consuming content creation
+- Regulatory and media **information overload**.
+- Scattered information sources.
+- A lack of time to convert technical monitoring into engaging content for their clients.
 
-Lighthouse filters noise, extracts signal, and converts complex regulation into accessible, engaging social media content.
+Lighthouse filters the noise, extracts the signal, and converts technical complexity into communication opportunities.
 
----
 
-## 🧠 How It Works
 
-### 1️⃣ RSS Monitoring
+## 🏗️ Technical Architecture (Serverless)
 
-- Automated scanning of predefined official RSS feeds
-- Scheduled execution (cron job or serverless scheduler)
-- Source validation to ensure reliability
+Lighthouse is built on a modern and robust AWS infrastructure:
 
-### 2️⃣ Content Filtering
+- **Runtime**: Node.js 20.x (ES Modules)
+- **AI Engine**: Google Generative AI (Gemini 3 Flash)
+- **Infrastructure**: AWS Lambda & Amazon EventBridge (Cron)
+- **Email Design**: MJML Framework
+- **Delivery**: Nodemailer (via secure SMTP)
 
-- Deduplication of articles
-- Relevance scoring
-- Impact evaluation based on predefined criteria
 
-### 3️⃣ AI Processing (Gemini 1.5 Flash)
 
-For each selected news item:
 
-- Extract key insights
-- Generate a simplified summary
-- Produce an Instagram carousel structure
+## ⚙️ Configuration (Environment Variables)
 
-### 4️⃣ Weekly Digest
-
-- Select the top 3 most impactful news items
-- Format content into structured email
-- Send via email service (SendGrid, Resend, Amazon SES, etc.)
+| Variable         | Description                        |
+| :--------------- | :--------------------------------- |
+| `GEMINI_API_KEY` | API Key to access Google Gemini    |
+| `EMAIL_HOST`     | SMTP Server (e.g., smtp.gmail.com) |
+| `EMAIL_USER`     | Email login ID                     |
+| `EMAIL_PASS`     | App Password (SMTP)                |
+| `EMAIL_TO`       | Recipients (comma-separated)       |
 
 ---
 
-## 📦 Output Format
+## 🛠 Customize it your way
 
-Each selected news item generates:
+Lighthouse is built to be modular. Here is how you can adapt it:
 
-### 📰 Simplified Summary
+### 1. Change the Sources (RSS Feeds)
+Edit the `src/config/feeds.js` file to add or remove sources.
+- Ensure you stick to the categories (`FINANCE`, `IMMO`, `TECH`) or define new ones.
 
-- What changed
-- Who is impacted
-- What action to consider
+### 2. Tweak the Email Design
+The design uses **MJML**. To change colors, fonts, or branding:
+- Modify `src/services/newsletter.js`.
+- If you change the structure, remember to update the Regex in the `formatContent` function.
 
-### 📱 Instagram Carousel Outline
+### 3. Adjust the AI's "Tone of Voice"
+Need a more formal or more casual tone?
+- Update the `prompt` variable in `src/services/aiService.js`.
+- You can change instructions like "Tutoies-là" (informal) to "Vouvoies le lecteur" (formal).
 
-Slide structure example:
+### 4. Delivery Frequency
+On AWS, update the Cron expression in **EventBridge**:
+- `cron(0 7 ? * MON *)` -> Monday 8 AM
+- `cron(0 17 ? * FRI *)` -> Friday 6 PM
 
-1. Hook (Attention-grabbing headline)
-2. Context (What is happening?)
-3. Key Change
-4. Who is impacted
-5. Practical Consequences
-6. Call to Action
 
-### ✉️ Email Delivery
 
-Weekly structured digest including:
-
-- Title
-- Summary
-- Instagram outline
-- Source link
-
----
-
-## 🏗️ Technical Architecture (Proposed)
-
-```text
-RSS Sources
-    ↓
-RSS Fetcher (Cron / Scheduler)
-    ↓
-Preprocessing Layer (Deduplication + Scoring)
-    ↓
-Gemini API (Content Analysis & Generation)
-    ↓
-Content Formatter
-    ↓
-Email Service Provider
-    ↓
-User Inbox
-```
+--- 
+_© 2026 • Lighthouse Finance AI • Built by SlowFocus_
