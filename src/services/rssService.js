@@ -16,10 +16,9 @@ export async function collecterArticles(feeds) {
   const limitDate = new Date();
   limitDate.setDate(limitDate.getDate() - 7);
 
-  for (const url of RSS_FEEDS) {
+  for (const feedConfig of RSS_FEEDS) {
     try {
-      const feed = await parser.parseURL(url);
-      console.log(yellow(`📖 Lecture de : ${feed.title}`));
+      const feed = await parser.parseURL(feedConfig.url);
       feed.items.forEach((item) => {
         const articleDate = new Date(item.pubDate || item.isoDate);
         if (articleDate > limitDate) {
@@ -28,11 +27,12 @@ export async function collecterArticles(feeds) {
             lien: item.link,
             source: feed.title || "Source officielle",
             date: articleDate.toLocaleDateString("fr-FR"),
+            category: feedConfig.category,
           });
         }
       });
     } catch (err) {
-      console.error(`❌ Erreur sur le flux ${url}: ${err.message}`);
+      console.error(`❌ Erreur sur le flux ${feedConfig.url}: ${err.message}`);
     }
   }
   console.timeEnd("⏱️ Temps de scan RSS");

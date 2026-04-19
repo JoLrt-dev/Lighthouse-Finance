@@ -30,7 +30,7 @@ export async function sendEmail(syntheseIA) {
   const mailOptions = {
     from: `"Lighthouse Finance" <${process.env.EMAIL_USER}>`,
     to: process.env.EMAIL_TO,
-    subject: `Lighthouse Finance : ${new Date().toLocaleDateString("fr-FR")}`,
+    subject: `Lighthouse Finance : Les actualités de la semaine`,
     html: html, // On injecte ici le résultat du rendu MJML
   };
 

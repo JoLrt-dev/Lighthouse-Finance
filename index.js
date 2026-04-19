@@ -17,13 +17,30 @@ async function runVeille() {
     console.log(green(`✅ ${articles.length} articles trouvés.`));
     // 2. On analyse si on a des résultats
     if (articles.length > 0) {
+      const financeArticles = articles
+        .filter((a) => a.category === "FINANCE")
+        .slice(0, 15); // Top 15 récents
+      const immoArticles = articles
+        .filter((a) => a.category === "IMMO")
+        .slice(0, 10);
+      const techArticles = articles
+        .filter((a) => a.category === "TECH")
+        .slice(0, 10);
+      const selectedArticles = [
+        ...financeArticles,
+        ...immoArticles,
+        ...techArticles,
+      ];
       console.log(
         cyan(`ÉTAPE 2 : Analyse par Gemini (${articles.length} articles)...`),
       );
       // --- DÉBUT LOADER IA ---
       const loaderIA = createLoader("L'IA synthétise les actualités...");
       console.time("⏱️ Temps de réponse IA");
-      const synthese = await aiAnalysis(articles, process.env.GEMINI_API_KEY);
+      const synthese = await aiAnalysis(
+        selectedArticles,
+        process.env.GEMINI_API_KEY,
+      );
       clearInterval(loaderIA);
       process.stdout.write("\r\x1b[K"); // Nettoie la ligne
       console.timeEnd("⏱️ Temps de réponse IA");
@@ -62,6 +79,5 @@ app.listen(port, async () => {
   console.log(cyan("=================================================="));
 
   // --- DÉCLENCHEMENT AUTOMATIQUE ---
-  // On lance la veille dès que le serveur est prêt
   await runVeille();
 });
