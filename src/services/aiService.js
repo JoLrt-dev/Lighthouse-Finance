@@ -37,7 +37,7 @@ CONSIGNES DE FORMATAGE STRICTES :
 4. Format du lien : <a href="LIEN_REEL" style="color: #D97706; text-decoration: none; font-weight: bold;">Lire sur SOURCE_REELLE</a>
 5. NE JAMAIS utiliser de guillemets "" pour encadrer les paragraphes de synthèse ou de vulgarisation.
 6. Pour la partie "Script Slides Instagram", le texte doit en gras uniquement les titres des slides (ex: **Slide 1:**). Le contenu de chaque slide doit être en texte normal, sans mise en forme supplémentaire. Ecris TOUTE la slide sur UNE SEULE LIGNE sans aucun retour à la ligne. 
-   Format : Slide X (Nom) : Contenu de la slide
+   Format : Slide X : Contenu de la slide
 7. NE JAMAIS mentionner le prénom "Maureen" dans les paragraphes de synthèse ou de vulgarisation. Parle-lui directement sans l'appeler par son nom à chaque sujet.
 8. En début de mail, soit poli et dit bonjour, mais ensuite, adopte un ton direct et dynamique pour le reste de la newsletter. Evite les formules de politesse répétitives.
 
