@@ -29,7 +29,7 @@ export async function sendEmail(syntheseIA) {
   // 4. Définition des options du mail
   const mailOptions = {
     from: `"Lighthouse Finance" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_TO,
+    to: process.env.EMAIL_TO.split(","),
     subject: `Lighthouse Finance : Les actualités de la semaine`,
     html: html, // On injecte ici le résultat du rendu MJML
   };

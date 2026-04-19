@@ -77,7 +77,7 @@ export async function runVeille() {
         if (loaderEmail) clearInterval(loaderEmail);
         console.log(
           green(
-            `✅ Newsletter envoyée avec succès à ${process.env.EMAIL_TO} !`,
+            `✅ Newsletter envoyée avec succès à ${process.env.EMAIL_TO.split(",").join(" et ")} !`,
           ),
         );
         return synthese;
