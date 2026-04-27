@@ -82,7 +82,7 @@ Identifie la news [TECH] la plus pertinente.
 
   try {
     const result = await genAI.models.generateContent({
-      model: "gemini-2.5-flash", // gemini-2.0-flash, gemini-3-flash-preview, gemini-3.1-pro-preview, gemini-pro-latest, gemini-2.5-flash-lite
+      model: "gemini-3-flash-preview", // gemini-2.0-flash, gemini-3-flash-preview, gemini-3.1-pro-preview, gemini-pro-latest, gemini-2.5-flash-lite
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.7,

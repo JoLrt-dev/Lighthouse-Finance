@@ -1,0 +1,33 @@
+name: Deploy Lighthouse to Lambda
+
+on:
+  push:
+    branches:
+      - main # Le pipeline se lance à chaque push sur main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Zip artifact
+        run: zip -r deploy.zip . -x "*.git*" ".github/*"
+
+      - name: Deploy to AWS Lambda
+        uses: appleboy/lambda-action@v0.1.9
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: us-east-1 # Ta région (ex: Paris)
+          function_name: lighthouseNewsletter # Remplace par le vrai nom
+          zip_file: deploy.zip
