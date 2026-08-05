@@ -1,5 +1,46 @@
 import { GoogleGenAI } from "@google/genai";
 
+async function generateWithRetry(
+  genAI,
+  modelName,
+  prompt,
+  maxRetries = 3,
+  baseDelay = 1000,
+) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await genAI.models.generateContent({
+        model: modelName,
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.8,
+        },
+      });
+    } catch (error) {
+      const errorMessage = error?.message || "";
+      const statusCode = error?.status || error?.code;
+
+      const isTransientError =
+        statusCode === 503 ||
+        statusCode === 429 ||
+        errorMessage.includes("503") ||
+        errorMessage.includes("high demand") ||
+        errorMessage.includes("UNAVAILABLE");
+
+      if (isTransientError && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.warn(
+          `⚠️ Modèle ${modelName} indisponible (tentative ${attempt + 1}/${maxRetries}). Re-tentative dans ${delay}ms...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+
 export async function aiAnalysis(articles) {
   const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
   const financeList = articles
@@ -79,27 +120,33 @@ Identifie la news [TECH] la plus pertinente.
 ### Conclusion globale :
 2-3 phrases maximum sur la tendance de fond de la semaine.
 `;
+  const PRIMARY_MODEL = "gemini-2.5-flash";
+  const FALLBACK_MODEL = "gemini-2.5-flash-lite";
+
+  let result;
 
   try {
-    const result = await genAI.models.generateContent({
-      model: "gemini-3-flash-preview", // gemini-2.0-flash, gemini-3-flash-preview, gemini-3.1-pro-preview, gemini-pro-latest, gemini-2.5-flash-lite
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.8,
-      },
-    });
-
-    if (result && result.candidates && result.candidates[0].content) {
-      const texteGenere = result.candidates[0].content.parts[0].text;
-      console.log("✅ Texte extrait avec succès");
-      return texteGenere;
-    } else {
-      console.log("Structure reçue :", JSON.stringify(result, null, 2));
-      throw new Error("La structure de réponse Gemini est inattendue.");
+    // 3 essais sur le modèle principal (pause 1s, puis 2s, puis 4s)
+    result = await generateWithRetry(genAI, PRIMARY_MODEL, prompt, 3, 1000);
+  } catch (primaryError) {
+    console.warn(
+      `🚨 Le modèle principal (${PRIMARY_MODEL}) a échoué. Bascule sur ${FALLBACK_MODEL}...`,
+    );
+    try {
+      // Bascule de secours : 2 essais sur le modèle lite
+      result = await generateWithRetry(genAI, FALLBACK_MODEL, prompt, 2, 1000);
+    } catch (fallbackError) {
+      console.error("❌ Échec des deux modèles.");
+      throw fallbackError;
     }
-  } catch (error) {
-    console.log("⚠️ Erreur lors de l'extraction :", error.message);
-    throw error;
+  }
+
+  if (result && result.candidates && result.candidates[0]?.content) {
+    const texteGenere = result.candidates[0].content.parts[0].text;
+    console.log("✅ Texte extrait avec succès");
+    return texteGenere;
+  } else {
+    console.log("Structure reçue :", JSON.stringify(result, null, 2));
+    throw new Error("La structure de réponse Gemini est inattendue.");
   }
 }
