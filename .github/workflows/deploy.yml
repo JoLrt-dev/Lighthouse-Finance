@@ -30,3 +30,4 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: eu-west-3
           function_name: ${{ vars.LAMBDA_FUNCTION_NAME }}
+          zip_file: deploy.zip
