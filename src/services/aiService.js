@@ -121,7 +121,7 @@ Identifie la news [TECH] la plus pertinente.
 2-3 phrases maximum sur la tendance de fond de la semaine.
 `;
   const PRIMARY_MODEL = "gemini-2.5-flash";
-  const FALLBACK_MODEL = "gemini-2.5-flash-lite";
+  const FALLBACK_MODEL = "gemini-3.5-flash-lite";
 
   let result;
 
